@@ -7,6 +7,7 @@
 use core::iter::Iterator;
 use core::sync::atomic::AtomicPtr;
 
+use kernel::pci::*;
 use kernel::pci::Resource;
 use kernel::prelude::*;
 use kernel::sync::Arc;
@@ -293,11 +294,13 @@ impl kernel::irq::Handler for E1000InterruptHandler {
 /// the private data for the adapter
 struct E1000DrvPrvData {
     _netdev_reg: net::Registration<NetDevice>,
+    _bar: i32,
 }
 
 impl driver::DeviceRemoval for E1000DrvPrvData {
     fn device_remove(&self) {
         pr_info!("Rust for linux e1000 driver demo (device_remove)\n");
+        
     }
 }
 
@@ -462,12 +465,31 @@ impl pci::Driver for E1000Drv {
             E1000DrvPrvData{
                 // Must hold this registration, or the device will be removed.
                 _netdev_reg: netdev_reg,
+                _bar: bars,
             }
         )?)
     }
 
-    fn remove(data: &Self::Data) {
+    fn remove(data: &Self::Data, pcidev: &mut pci::Device) {
         pr_info!("Rust for linux e1000 driver demo (remove)\n");
+        
+        // let pdev = pcidev.from_ptr();
+        
+        // let netdev = &pdev.dev.driver_data; // confused
+
+        // pdev.disable_device();
+        // unsafe {
+        //     // bindings::unregister_netdev(netdev);
+        //     bindings::pci_release_selected_regions(pdev, data._bar);
+        //     // bindings::free_netdev();
+            
+        //     bindings::pci_disable_device(pdev);
+        // }
+
+
+        pcidev.release_selected_regions(data._bar);
+        pcidev.disable_device();
+        drop(data);
     }
 }
 struct E1000KernelMod {
@@ -486,7 +508,17 @@ impl kernel::Module for E1000KernelMod {
 }
 
 impl Drop for E1000KernelMod {
+    // fn drop(pcidev: &mut pci::Device, &mut self: E1000KernelMod) {
     fn drop(&mut self) {
         pr_info!("Rust for linux e1000 driver demo (exit)\n");
+        
+        // unsafe { bindings::put_device(self.ptr) };
+        // unsafe {
+        //     if self.registered {
+        //         bindings::unregister_netdev(self.dev);
+        //     }
+        //     bindings::free_netdev(self.dev);
+        // }
+
     }
 }

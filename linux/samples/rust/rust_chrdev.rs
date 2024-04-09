@@ -9,6 +9,8 @@ use kernel::prelude::*;
 use kernel::sync::Mutex;
 use kernel::{chrdev, file};
 
+// use kernel::bindings;
+// use core::ffi::c_void;
 const GLOBALMEM_SIZE: usize = 0x1000;
 
 module! {
@@ -44,19 +46,29 @@ impl file::Operations for RustFile {
         _this: &Self,
         _file: &file::File,
         _reader: &mut impl kernel::io_buffer::IoBufferReader,
-        _offset:u64,) -> Result<usize> {
+        _offset:u64,
+    ) -> Result<usize> {
         
         if _reader.is_empty() {
             return Ok(0);
         }
 
         let mut contents = _this.inner.lock(); // 加锁 互斥 connents
-        // _this.inner.lock();
+        // // _this.inner.lock();
         let len = _reader.len();
         _reader.read_slice(& mut contents[0..len])?;
-        // _reader.read_all()?;
-        pr_info!("write !!!!");
+        // // _reader.read_all()?;
+        pr_info!("write !!!!\n");
         Ok(len)
+
+        // /* 2 */
+        // let mut buffer = _this.inner.lock();
+        // let len = _reader.len();
+        // let reader_ptr = _reader as *mut dyn kernel::io_buffer::IoBufferReader as *const c_void;
+        // unsafe { 
+        //     bindings::_copy_from_user(buffer.as_mut_ptr(), reader_ptr, len as u64)
+        // }
+
         // Err(EPERM)
         
     }
