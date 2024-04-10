@@ -39,6 +39,7 @@
 #include <linux/uaccess.h>
 #include <linux/uio.h>
 #include <uapi/linux/android/binder.h>
+#include <linux/completion.h>
 
 /* `bindgen` gets confused at certain things. */
 const gfp_t BINDINGS_GFP_KERNEL = GFP_KERNEL;
